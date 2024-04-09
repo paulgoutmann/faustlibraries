@@ -362,6 +362,52 @@ with {
 };
 
 
+//============================Analysis Functions======================================
+//In order to apprehend or anticipate the localization accuracy of an ambisonic reproduction, 
+//two indices have been theorized by Gerzon based on Makita's theory of perception: 
+//the energy vector and the velocity vector. 
+//========================================================================================
+
+
+//-------`(ho.)vectorVE`----------
+// The velocity vector is valid for frequencies below 700 Hz, its direction corresponds 
+//to the apparent direction of the source and its norm corresponds to the precision (or blur) 
+//of the rendering. The energy vector is the analog of the velocity vector for frequencies 
+//from 500 Hz to 5 kHz. These localization indices, calculated on the signals sent to the loudspeakers, 
+//enable ambisonic signals to be optimized for the best possible rendering in a given situation. 
+//The function receives post-decodage signals and gives the coordinate of the two vectors.
+//
+// #### Usage
+//
+// ```
+// _,_, ... : vectorV(la) : _,_,_,_,
+// ```
+//
+// Where:
+//
+// * `la`: the list of angles in degrees
+//-----------------------------
+
+vectorVE(la) = thisVectorVE
+with{
+    p = outputs(la);
+    ang(i) = ba.take(i+1, la);
+    //Polar to cartesian coordinates
+    lx(p) = par(i, p, * (cos((ang(i) + 90) / 180 * ma.PI)));
+    ly(p) = par(i, p, * (sin((ang(i) + 90) / 180 * ma.PI)));
+    
+    clip(mini,maxi) = min(maxi, max(mini, _));
+    parSquare(p) = par(i, p, ^(2));
+    sumOfSquare(p) = par(i, p, _ <: (*)) :> _ ;
+    simpleSum(p) = si.bus(p) :> _ ;
+    zeroException =  _ <: (_ == (0)) * ma.MIN, _  : + ;
+
+    vx(p) = si.bus(2*p+2) : par(i, 2, (lx(p):simpleSum(p))), si.bus(2):route(4,4, 1, 1, 2, 3, 3, 4, 4, 2) : /, / : clip(-1, 1), clip(-1,1);
+    vy(p) = si.bus(2*p+2) : par(i, 2, (ly(p):simpleSum(p))), si.bus(2):route(4,4, 1, 1, 2, 3, 3, 4, 4, 2) : /, / : clip(-1, 1), clip(-1,1);
+
+thisVectorVE = si.bus(p) <: si.bus(p), (parSquare(p)<:si.bus(p), (simpleSum(p):zeroException)), (simpleSum(p):zeroException) <: vx(p), vy(p) : ro.interleave(2, 2);
+};
+
 //============================Optimization Functions======================================
 // Functions to weight the circular harmonics signals depending to the
 // ambisonics optimization.
