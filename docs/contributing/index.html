@@ -15,7 +15,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
         <link href="../css/extra.css" rel="stylesheet">
 
-        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/jquery-3.6.0.min.js" defer></script>
         <script src="../js/bootstrap.min.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
@@ -24,7 +24,7 @@
     <body>
         <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" href=".."><img src="../img/faustText.svg" width="150px"> Libraries</a>
+                <a class="navbar-brand" href=".."><img src="../img/faustText.svg" width="150px"> </a>
                 <!-- Expander button -->
                 <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
@@ -112,6 +112,10 @@
                                     
 <li>
     <a href="../libs/interpolators/" class="dropdown-item"> interpolators </a>
+</li>
+                                    
+<li>
+    <a href="../libs/linearalgebra/" class="dropdown-item"> linearalgebra </a>
 </li>
                                     
 <li>
@@ -382,6 +386,7 @@ fd = library(&quot;fds.lib&quot;);
 fi = library(&quot;filters.lib&quot;);
 ho = library(&quot;hoa.lib&quot;);
 it = library(&quot;interpolators.lib&quot;);
+la = library(&quot;linearalgebra.lib&quot;);
 ma = library(&quot;maths.lib&quot;);
 mi = library(&quot;mi.lib&quot;);
 ef = library(&quot;misceffects.lib&quot;);
@@ -428,8 +433,8 @@ process = _;
 <li>regenerate the PDF documentation using <code>make pdf</code> target in the <code>doc</code> folder</li>
 <li>update the library submodule in <a href="https://github.com/grame-cncm/faust">faust</a>, recompile and deploy WebAssembly libfaust in <a href="https://github.com/grame-cncm/fausteditor">fausteditor</a>, <a href="https://github.com/grame-cncm/faustplayground">faustplayground</a> and <a href="https://github.com/grame-cncm/faustide">faustide</a></li>
 <li>update the library submodule in <a href="https://github.com/grame-cncm/faustlive">faustlive</a> </li>
-<li>update the library list in this <a href="https://github.com/grame-cncm/fausteditor/blob/master/scripts/faustlive.js">fausteditor</a> page as well as the <a href="https://github.com/grame-cncm/fausteditor/blob/master/codemirror/mode/faust/faustsnippets.js">snippets</a> (using the <code>faust2atomsnippets</code> tool).</li>
-<li>update the library list in this <a href="https://github.com/grame-cncm/faustide/blob/master/src/documentation.ts">faustide</a> page and those <a href="https://github.com/grame-cncm/faustide/tree/master/docs/examples/LIBRARIES">files</a></li>
+<li>update the library list in this <a href="https://github.com/grame-cncm/fausteditor/blob/master/src/faustlive.js">fausteditor</a> page as well as the <a href="https://github.com/grame-cncm/fausteditor/blob/master/src/codemirror/mode/faust/faustsnippets.js">snippets</a> (using the <code>faust2atomsnippets</code> tool).</li>
+<li>update the library list in this <a href="https://github.com/grame-cncm/faustide/blob/master/src/documentation.ts">faustide</a> page.</li>
 <li>update the library list in the <a href="https://github.com/grame-cncm/faust/blob/master-dev/embedded/faustgen/src/faustgen%7E.cpp">faustgen~</a> code</li>
 <li>update the <a href="https://github.com/grame-cncm/faust/tree/master-dev/syntax-highlighting">Faust Syntax Highlighting Files</a></li>
 <li>make an update PR for <a href="https://github.com/hellbent/vscode-faust">vscode-faust</a> project</li>
@@ -439,7 +444,7 @@ process = _;
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2019-2024 <a href="https://www.grame.fr">Grame-CNCM</a></p>
+                <p>Copyright &copy; 2019-2025 <a href="https://www.grame.fr">Grame-CNCM</a></p>
         </footer>
         <script>
             var base_url = "..",

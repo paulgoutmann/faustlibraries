@@ -1,7 +1,7 @@
 //##################################### filters.lib ########################################
 // Filters library. Its official prefix is `fi`.
 //
-// The Filters library is organized into 22 sections:
+// The Filters library is organized into 23 sections:
 //
 // * [Basic Filters](#basic-filters)
 // * [Comb Filters](#comb-filters)
@@ -25,6 +25,7 @@
 // * [Linkwitz-Riley 4th-order 2-way, 3-way, and 4-way crossovers](#linkwitz-riley-4th-order-2-way-3-way-and-4-way-crossovers)
 // * [Standardized Filters](#standardized-filters)
 // * [Averaging Functions](#averaging-functions)
+// * [Kalman Filters](#kalman-filters)
 //
 // #### References
 // * <https://github.com/grame-cncm/faustlibraries/blob/master/filters.lib>
@@ -33,7 +34,7 @@
 
 // NOTE ABOUT LICENSES:
 // Each function in this library has its own license. Licenses are declared
-// before each function. Corresponding license terms can be found at the 
+// before each function. Corresponding license terms can be found at the
 // bottom of this file or in the Faust libraries documentation.
 
 ma = library("maths.lib");
@@ -44,9 +45,10 @@ an = library("analyzers.lib");
 ef = library("misceffects.lib");
 si = library("signals.lib");
 fi = library("filters.lib"); // for compatible copy/paste out of this file
+la = library("linearalgebra.lib");
 
 declare name "Faust Filters Library";
-declare version "1.3.0";
+declare version "1.6.0";
 
 //===============================Basic Filters============================================
 //========================================================================================
@@ -103,14 +105,14 @@ declare integrator license "MIT-style STK-4.3 license";
 integrator = + ~ _;
 
 //-------------------`(fi.)dcblockerat`-----------------------
-// DC blocker with configurable break frequency.
-// The amplitude response is substantially flat above \(fb\),
-// and sloped at about +6 dB/octave below \(fb\).
+// DC blocker with configurable "break frequency".
+// The amplitude response is substantially flat above `fb`,
+// and sloped at about +6 dB/octave below `fb`.
 // Derived from the analog transfer function:
-// $$H(s) = \frac{s}{(s + 2 \pi fb)}$$
+// $$H(s) = \frac{s}{(s + 2 \pi f_b)}$$
 // (which can be seen as a 1st-order Butterworth highpass filter)
 // by the low-frequency-matching bilinear transform method
-// (i.e., the standard frequency-scaling constant 2*SR).
+// (i.e., using the typical frequency-scaling constant `2*SR`).
 //
 // #### Usage
 //
@@ -120,10 +122,11 @@ integrator = + ~ _;
 //
 // Where:
 //
-// * `fb`: "break frequency" in Hz, i.e., -3 dB gain frequency.
+// * `fb`: "break frequency" in Hz, i.e., -3 dB gain frequency (see 2nd reference below)
 //
-// #### Reference
-// <https://ccrma.stanford.edu/~jos/pasp/Bilinear_Transformation.html>
+// #### References
+// * <https://ccrma.stanford.edu/~jos/pasp/Bilinear_Transformation.html>
+// * <https://ccrma.stanford.edu/~jos/spectilt/Bode_Plots.html>
 //------------------------------------------------------------
 declare dcblockerat author "Julius O. Smith III";
 declare dcblockerat copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
@@ -548,8 +551,8 @@ conv(kv) = fir(kv);
 //
 // Where:
 //
-// * `a`: the poles
-// * `b`: the zeros
+// * `b`: transfer-function numerator
+// * `a`: transfer-function denominator (monic)
 //
 // #### Reference
 // <https://ccrma.stanford.edu/~jos/fp/Direct_Form_I.html>
@@ -642,8 +645,8 @@ with {
 //
 // Where:
 //
-// * `a`: the poles
-// * `b`: the zeros
+// * `b`: transfer-function numerator
+// * `a`: transfer-function denominator (monic)
 //
 // #### Reference
 // <https://ccrma.stanford.edu/~jos/fp/Direct_Form_I.html>
@@ -654,7 +657,7 @@ declare tf21 license "MIT-style STK-4.3 license";
 tf21(b0,b1,b2,a1,a2) = // tf2, direct-form 1:
     _ <:(mem<:((mem:*(b2)),*(b1))),*(b0) :>_
     : ((_,_,_:>_) ~(_<:*(-a1),(mem:*(-a2))));
-    
+
 declare tf22 author "Julius O. Smith III";
 declare tf22 copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
 declare tf22 license "MIT-style STK-4.3 license";
@@ -769,8 +772,8 @@ bvav2nuv(bv,av) = par(m,M+1,nu(m)) with {
 //
 // Where:
 //
-// * bv: zeros as a bank of parallel signals
-// * av: poles as a bank of parallel signals
+// * `bv`: transfer-function numerator
+// * `av`: transfer-function denominator (monic)
 //------------------------------------------------------------
 declare iir_lat2 author "Julius O. Smith III";
 declare iir_lat2 copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
@@ -783,18 +786,23 @@ with {
 };
 
 //-----------------------`(fi.)allpassnt`--------------------------
-// Two-multiply lattice allpass (nested order-1 direct-form-ii allpasses).
+// Two-multiply lattice allpass (nested order-1 direct-form-ii allpasses), with taps.
 //
 // #### Usage
 //
 // ```
-// _ : allpassnt(n,sv) : _
+// _ : allpassnt(n,sv) : si.bus(n+1)
 // ```
 //
 // Where:
 //
 // * `n`: the order of the filter
 // * `sv`: the reflection coefficients (-1 1)
+//
+// The first output is the n-th order allpass output,
+// while the remaining outputs are taps taken from the
+// input of each delay element from the input to the output.
+// See (fi.)allpassn for the single-output case.
 //------------------------------------------------------------
 declare allpassnt author "Julius O. Smith III";
 declare allpassnt copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
@@ -819,8 +827,8 @@ with {
 //
 // Where:
 //
-// * bv: zeros as a bank of parallel signals
-// * av: poles as a bank of parallel signals
+// * `bv`: transfer-function numerator
+// * `av`: transfer-function denominator (monic)
 //------------------------------------------------------------
 declare iir_kl author "Julius O. Smith III";
 declare iir_kl copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
@@ -874,8 +882,8 @@ with {
 //
 // Where:
 //
-// * bv: zeros as a bank of parallel signals
-// * av: poles as a bank of parallel signals
+// * bv: transfer-function numerator as a bank of parallel signals
+// * av: transfer-function denominator as a bank of parallel signals
 //------------------------------------------------------------
 declare iir_lat1 author "Julius O. Smith III";
 declare iir_lat1 copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
@@ -929,8 +937,8 @@ with {
 //
 // Where:
 //
-// * bv: zeros as a bank of parallel signals
-// * av: poles as a bank of parallel signals
+// * `bv`: transfer-function numerator
+// * `av`: transfer-function denominator (monic)
 //
 // #### References
 // * J. D. Markel and A. H. Gray, Linear Prediction of Speech, New York: Springer Verlag, 1976.
@@ -1000,8 +1008,8 @@ with {
 //
 // Where:
 //
-// * `a`: the poles
-// * `b`: the zeros
+// * `b`: transfer-function numerator
+// * `a`: transfer-function denominator (monic)
 //------------------------------------------------------------
 declare tf2np author "Julius O. Smith III";
 declare tf2np copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
@@ -1115,7 +1123,7 @@ with {
 //============================Ladder/Lattice Allpass Filters==============================
 // An allpass filter has gain 1 at every frequency, but variable phase.
 // Ladder/lattice allpass filters are specified by reflection coefficients.
-// They are defined here as nested allpass filters, hence the names allpassn*.
+// They are defined here as nested allpass filters, hence the names `allpassn*`.
 //
 // #### References
 // * <https://ccrma.stanford.edu/~jos/pasp/Conventional_Ladder_Filters.html>
@@ -1123,8 +1131,92 @@ with {
 // * Linear Prediction of Speech, Markel and Gray, Springer Verlag, 1976
 //========================================================================================
 
+//-----------------------`(fi.)scatN`--------------------------
+// N-port scattering junction.
+//
+// #### Usage
+//
+// ```
+// si.bus(N) : scatN(N,av,filter) : si.bus(N)
+// ```
+//
+// Where:
+//
+// * `N`: number of incoming/outgoing waves
+// * `av`: vector (list) of `N` alpha parameters (each between 0 and 2, and normally summing to 2): <https://ccrma.stanford.edu/~jos/pasp/Alpha_Parameters.html>
+// * `filter` : optional junction filter to apply (`_` for none, see below)
+//
+// With no filter:
+//
+// - The junction is _lossless_ when the alpha parameters sum to 2 ("allpass").
+// - The junction is _passive_ but lossy when the alpha parameters sum to less than 2 ("resistive loss").
+// - Dynamic and reactive junctions are obtained using the `filter` argument.
+//   For guaranteed stability, the filter should be _positive real_. (See 2nd ref. below).
+//
+// For \(N=2\) (two-port scattering), the reflection coefficient \(\rho\) corresponds
+// to alpha parameters \(1\pm\rho\).
+//
+// #### Example: Whacky echo chamber made of 16 lossless "acoustic tubes":
+//
+// ```
+// process = _ : *(1.0/sqrt(N)) <: daisyRev(16,2,0.9999) :> _,_ with { 
+//   daisyRev(N,Dp2,G) = si.bus(N) : (si.bus(2*N) :> si.bus(N)
+//     : fi.scatN(N, par(i,N,2*G/float(N)), fi.lowpass(1,5000.0))
+//     : par(i,N,de.delay(DS(i),DS(i)-1))) ~ si.bus(N) with { DS(i) = 2^(Dp2+i); };
+// };
+// ```
+//
+// #### References
+// * <https://ccrma.stanford.edu/~jos/pasp/Loaded_Waveguide_Junctions.html>
+// * <https://ccrma.stanford.edu/~jos/pasp/Passive_String_Terminations.html>
+// * <https://ccrma.stanford.edu/~jos/pasp/Unloaded_Junctions_Alpha_Parameters.html>
+//------------------------------------------------------------
+declare scatN author "Julius O. Smith III";
+declare scatN copyright "Copyright (C) 2024 by Julius O. Smith III <jos@ccrma.stanford.edu>";
+declare scatN license "MIT-style STK-4.3 license";
+
+scatN(0,av,filter) = !;
+scatN(N,av,filter) = incomingWaves <: (junctionSum : filter <: si.bus(N)), par(i,N,*(-1)) :> si.bus(N)
+with {
+  incomingWaves = si.bus(N);
+  alpha(i) = ba.take(i+1,av);
+  junctionSum = par(i,N,*(alpha(i))) :> _; // Junction velocity/pressure for series/parallel junction
+  outgoingWaves = junctionSum <: si.bus(N), negatedIncoming :> si.bus(N);
+  alphaSum = sum(i,N,alpha(i));
+};
+
+//---------------`(fi.)scat`-----------------
+// Scatter off of reflectance r with reflection coefficient s.
+//
+// #### Usage:
+//
+// ```
+// _ : scat(s,r) : _
+// ```
+// #### Where:
+//
+// * `s`: reflection coefficient between -1 and 1 for stability
+// * `r`: single-input, single-output block diagram,
+//        having gain less than 1 at all frequencies for stability.
+//
+// #### Example:  The following program should produce all zeros:
+//
+// ```
+// process = fi.allpassn(3,(.3,.2,.1)), fi.scat(.1, fi.scat(.2, fi.scat(.3, _)))
+//           :> - : ^(2) : +~_;
+// ```
+//
+// #### Reference:
+// * <https://ccrma.stanford.edu/~jos/pasp/Scattering_Impedance_Changes.html>
+//----------------------------------------------
+declare scat author "Julius O. Smith III";
+declare scat copyright "Copyright (C) 2024 by Julius O. Smith III <jos@ccrma.stanford.edu>";
+declare scat license "MIT-style STK-4.3 license";
+
+scat(s,r) = _ <: ((+ <: (r,*(s)))~(*(-s))) : _',_ :+;
+
 //---------------`(fi.)allpassn`-----------------
-// Two-multiply lattice - each section is two multiply-adds.
+// Two-multiply lattice filter.
 //
 // #### Usage:
 //
@@ -1135,14 +1227,19 @@ with {
 //
 // * `n`: the order of the filter
 // * `sv`: the reflection coefficients (-1 1)
+// * `sv`: the reflection coefficients  (s1,s2,...,sN), each between -1 and 1.
+//
+// Equivalent to `fi.allpassnt(n,sv) : _, par(i,n,!);`
+// Equivalent to `fi.scat( s(n), fi.scat( s(n-1), ..., fi.scat( s(1), _ )))
+//               with { s(k) = ba.take(k,sv); } ;`
+// Identical to `allpassn` in `old/filter.lib`.
 //
 // #### References
-// * J. O. Smith and R. Michon, "Nonlinear Allpass Ladder Filters in FAUST", in
-// Proceedings of the 14th International Conference on Digital Audio Effects
-// (DAFx-11), Paris, France, September 19-23, 2011.
+// * J. D. Markel and A. H. Gray: Linear Prediction of Speech, New York: Springer Verlag, 1976.
+// * <https://ccrma.stanford.edu/~jos/pasp/Conventional_Ladder_Filters.html>
 //----------------------------------------------
-declare allpassn author "Julius O. Smith III and Romain Michon";
-declare allpassn copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu> and Romain Michon <rmichon@ccrma.stanford.edu>";
+declare allpassn author "Julius O. Smith III";
+declare allpassn copyright "Copyright (c) 2003-2024 by Julius O. Smith III <jos@ccrma.stanford.edu>";
 declare allpassn license "MIT-style STK-4.3 license";
 allpassn(0,sv) = _;
 allpassn(n,sv) = _ <: ((+ <: (allpassn(n-1,sv)),*(s))~(*(-s))) : _',_ :+
@@ -1581,7 +1678,7 @@ lowpass(N,fc) = lowpass0_highpass1(0,N,fc);
 
 
 //----------------`(fi.)highpass`--------------------
-// Nth-order Butterworth highpass filters.
+// Nth-order Butterworth highpass filter.
 // `highpass` is a standard Faust function.
 //
 // #### Usage
@@ -1884,8 +1981,6 @@ with {
 // Thus, the passband width is `fu-fl`,
 //       and its center frequency is `(fl+fu)/2`.
 //
-// #### Reference
-// <http://cnx.org/content/m16913/latest/>
 //-------------------------------------------------------------------------
 declare bandpass author "Julius O. Smith III";
 declare bandpass copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
@@ -1912,8 +2007,6 @@ bandpass(Nh,fl,fu) = bandpass0_bandstop1(0,Nh,fl,fu);
 // Thus, the passband (stopband) width is `fu-fl`,
 //       and its center frequency is `(fl+fu)/2`.
 //
-// #### Reference
-// <http://cnx.org/content/m16913/latest/>
 //-------------------------------------------------------------------------
 declare bandstop author "Julius O. Smith III";
 declare bandstop copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
@@ -2501,7 +2594,7 @@ levelfilterN(N,freq,L) = seq(i,N,levelfilter((L/N),freq));
 declare mth_octave_filterbank author "Julius O. Smith III";
 declare mth_octave_filterbank copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
 declare mth_octave_filterbank license "MIT-style STK-4.3 license";
-mth_octave_filterbank(O,M,ftop,N) = an.mth_octave_analyzer(O,M,ftop,N) : delayeq(N) 
+mth_octave_filterbank(O,M,ftop,N) = an.mth_octave_analyzer(O,M,ftop,N) : delayeq(N)
 with {
    fc(n) = ftop * 2^(float(n-N+1)/float(M)); // -3dB crossover frequencies
    ap(n) = highpass_plus_lowpass(O,fc(n));   // delay-equalizing allpass
@@ -2515,7 +2608,7 @@ with {
 declare mth_octave_filterbank_alt author "Julius O. Smith III";
 declare mth_octave_filterbank_alt copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
 declare mth_octave_filterbank_alt license "MIT-style STK-4.3 license";
-mth_octave_filterbank_alt(O,M,ftop,N) = an.mth_octave_analyzer(O,M,ftop,N) : delayeqi(O,N) 
+mth_octave_filterbank_alt(O,M,ftop,N) = an.mth_octave_analyzer(O,M,ftop,N) : delayeqi(O,N)
 with {
     fc(n) = ftop * 2^(float(n-N+1)/float(M)); // -3dB crossover frequencies
     ap(n) = highpass_minus_lowpass(O,fc(n)); // half the order of 'plus' case
@@ -2575,7 +2668,7 @@ mth_octave_filterbank_default = mth_octave_filterbank5;
 declare filterbank author "Julius O. Smith III";
 declare filterbank copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
 declare filterbank license "MIT-style STK-4.3 license";
-filterbank(O,lfreqs) = an.analyzer(O,lfreqs) : delayeq(nb) 
+filterbank(O,lfreqs) = an.analyzer(O,lfreqs) : delayeq(nb)
 with {
    nb = ba.count(lfreqs);
    fc(n) = ba.take(n, lfreqs);
@@ -2611,7 +2704,7 @@ with {
 declare filterbanki author "Julius O. Smith III";
 declare filterbanki copyright "Copyright (C) 2003-2019 by Julius O. Smith III <jos@ccrma.stanford.edu>";
 declare filterbanki license "MIT-style STK-4.3 license";
-filterbanki(O,lfreqs) = _ <: bsplit(nb) 
+filterbanki(O,lfreqs) = _ <: bsplit(nb)
 with {
    nb = ba.count(lfreqs);
    fc(n) = ba.take(n, lfreqs);
@@ -2626,14 +2719,14 @@ with {
 
 
 //===============State Variable Filters=========================================================
-// #### References 
+// #### References
 // Solving the continuous SVF equations using trapezoidal integration
 //
 // <https://cytomic.com/files/dsp/SvfLinearTrapOptimised2.pdf>
 //========================================================================================
 
 //-----------------`(fi.)svf`----------------------
-// An environment with `lp`, `bp`, `hp`, `notch`, `peak`, `ap`, `bell`, `ls`, `hs` SVF based filters. 
+// An environment with `lp`, `bp`, `hp`, `notch`, `peak`, `ap`, `bell`, `ls`, `hs` SVF based filters.
 // All filters have `freq` and `Q` parameters, the `bell`, `ls`, `hs` ones also have a `gain` third parameter.
 //
 // #### Usage
@@ -2694,7 +2787,7 @@ svf = environment {
 		} (T);
 	};
 
-	// External API 
+	// External API
 	lp(f,q)     = svf(0, f, q, 0);
 	bp(f,q)     = svf(1, f, q, 0);
 	hp(f,q)     = svf(2, f, q, 0);
@@ -2704,6 +2797,157 @@ svf = environment {
 	bell(f,q,g) = svf(6, f, q, g);
 	ls(f,q,g)   = svf(7, f, q, g);
 	hs(f,q,g)   = svf(8, f, q, g);
+};
+
+//----------`(fi.)SVFTPT`---------------------------------------------------------
+//
+// Topology-preserving transform implementation following Zavalishin's method.
+//
+// Outputs: lowpass, highpass, bandpass, normalised bandpass, notch, allpass, 
+// peaking.
+//
+// Each individual output can be recalled with its name in the environment as in:
+//      `SVFTPT.LP2(1000.0, .707)`.
+//
+// The 7 outputs can be recalled by using `SVF` name as in:
+//      `SVFTPT.SVF(1000.0, .707)`.
+//
+// Even though the implementation is different, the characteristics of this
+// filter are comparable to those of the `svf` environment in this library.
+//
+// #### Usage:
+//
+// ```
+// _ : SVFTPT.xxx(CF, Q) : _
+// ```
+//
+// Where:
+//
+// * `xxx` can be one of the following: `LP2`, `HP2`, `BP2`, `BP2Norm`, `Notch2`, `AP2`, `Peaking2`
+// * `CF`: cutoff in Hz
+// * `Q`: resonance
+// 
+//------------------------------------------------------------------------------
+declare SVFTPT author "Dario Sanfilippo";
+declare SVFTPT copyright
+    "Copyright (C) 2024 Dario Sanfilippo <sanfilippo.dario@gmail.com>";
+declare SVFTPT license "MIT License";
+SVFTPT = environment {
+    SVF(CF, Q, x) = f ~ si.bus(2) : (! , ! , _ , _ , _ , _ , _ , _ , _)
+        with {
+            g = tan(CF * ma.PI * ma.T);
+            R2 = 1.0 / Q;
+            gPlusR2 = g + R2;
+            f(s0, s1) = u0 , u1 , LP , HP , BP , BPNorm , Notch , AP , Peaking
+                with {
+                    HP = (x - s0 * gPlusR2 - s1) / (1.0 + g * gPlusR2);
+                    v0 = HP * g;
+                    BP = s0 + v0;
+                    v1 = BP * g;
+                    LP = s1 + v1;
+                    BPNorm = BP * R2;
+                    Notch = x - BPNorm;
+                    AP = x - BP * (R2 + R2);
+                    Peaking = LP - HP;
+                    u0 = v0 + BP;
+                    u1 = v1 + LP;
+                };
+        };
+    LP2(CF, Q, x) = SVF(CF, Q, x) : ba.selectn(7, 0);
+    HP2(CF, Q, x) = SVF(CF, Q, x) : ba.selectn(7, 1);
+    BP2(CF, Q, x) = SVF(CF, Q, x) : ba.selectn(7, 2);
+    BP2Norm(CF, Q, x) = SVF(CF, Q, x) : ba.selectn(7, 3);
+    Notch2(CF, Q, x) = SVF(CF, Q, x) : ba.selectn(7, 4);
+    AP2(CF, Q, x) = SVF(CF, Q, x) : ba.selectn(7, 5);
+    Peaking2(CF, Q, x) = SVF(CF, Q, x) : ba.selectn(7, 6);
+};
+
+//----------`(fi.)dynamicSmoother`------------------------------------------------
+//
+// Adaptive smoother based on Andy Simper's paper.
+// 
+// This filter uses both the lowpass and bandpass outputs of a 
+// state-variable filter. The lowpass is used to smooth out the input signal,
+// the bandpass, which is a smoothed out version of the highpass, provides
+// information on the rate of change of the input. Hence, the bandpass signal
+// can be used to adjust the cutoff of the filter to quickly follow the input's
+// fast and large variations while effectively filtering out local 
+// perturbations.
+//
+// This implementation does not use an approximation for the CF computation,
+// and it deploys guards to prevent overshooting with extreme sensitivity 
+// values.
+//
+// #### Usage:
+//
+// ```
+// _ : dynamicSmoother(sensitivity, baseCF) : _
+// ```
+//
+// Where:
+//
+// * `sensitivity`: sensitivity to changes in the input signal.
+//      The range is, theoretically, from 0 to INF, though anything between
+//      0.0 and 1.0 should be reasonable
+// * `baseCF`: cutoff frequency, in Hz, when there is no variation in the 
+//      input signal
+//
+// #### Reference
+//  <https://cytomic.com/files/dsp/DynamicSmoothing.pdf>
+//
+//------------------------------------------------------------------------------
+declare dynamicSmoothing author "Dario Sanfilippo";
+declare dynamicSmoothing copyright
+    "Copyright (C) 2024 Dario Sanfilippo <sanfilippo.dario@gmail.com>";
+declare dynamicSmoothing license "MIT License";
+dynamicSmoothing(sensitivity, baseCF, x) = f ~ _ : ! , _
+    with {
+        f(s) = SVFTPT.BP2(CF, .5 , x) , SVFTPT.LP2(CF, .5, x)
+            with {
+                CF = min(ma.SR * .125, baseCF + sensitivity * abs(s) * ma.SR * .5);
+            };
+    };
+
+
+//-----------------`(fi.)oneEuro`----------------------------------
+// The One Euro Filter (1€ Filter) is an adaptive lowpass filter.
+// This kind of filter is commonly used in object-tracking,
+// not necessarily audio processing.
+// 
+// #### Usage
+//
+// ```
+// _ : oneEuro(derivativeCutoff, beta, minCutoff) : _
+// ```
+//
+// Where:
+//
+// * `derivativeCutoff`: Used to filter the first derivative of the input. 1 Hz is a good default.
+// * `beta`: "Speed" parameter where higher values reduce latency.
+// * `minCutoff`: Minimum cutoff frequency in Hz. Lower values remove more jitter.
+//
+// #### References
+// * <https://gery.casiez.net/1euro/>
+//------------------------------------------------------------------------
+declare oneEuro author "David Braun";
+declare oneEuro copyright "Copyright (C) 2024 by David Braun <braun@ccrma.stanford.edu>";
+declare oneEuro license "MIT";
+oneEuro(derivativeCutoff, beta, minCutoff) = _oneEuro ~ _
+with {
+    // exponential moving average that calculates its own alpha from a cutoff in Hz
+    // _ : ema(cutoff) : _
+    ema(cutoff) = tick ~ _
+    with {
+        alpha = 1.0 / (1.0 + ma.SR / (2 * ma.PI * cutoff));
+        tick(prev, x) = prev*(1-alpha) + x*alpha;
+    };
+
+    _oneEuro(prev, x) = x : ema(adaptiveCutoff)
+    with {
+        derivative = (x - prev)*ma.SR;
+        derivativeFiltered = derivative : ema(derivativeCutoff);
+        adaptiveCutoff =  minCutoff + beta * abs(derivativeFiltered);  
+    };
 };
 
 
@@ -2721,7 +2965,7 @@ svf = environment {
 // For the phase correction, we will use the 2nd-order Butterworth allpass.
 //
 // #### Reference
-// Zavalishin, Vadim. "The art of VA filter design." Native Instruments, Berlin, Germany (2012). 
+// Zavalishin, Vadim. "The art of VA filter design." Native Instruments, Berlin, Germany (2012).
 //=============================================================================
 
 
@@ -2967,8 +3211,8 @@ with {
 // * `period` is the averaging frame in seconds
 //-----------------------------------------------------------------------------
 declare avg_rect author "Dario Sanfilippo and Julius O. Smith III";
-declare avg_rect copyright "Copyright (C) 2020 Dario Sanfilippo 
-      <sanfilippo.dario@gmail.com> and 
+declare avg_rect copyright "Copyright (C) 2020 Dario Sanfilippo
+      <sanfilippo.dario@gmail.com> and
        2003-2020 by Julius O. Smith III <jos@ccrma.stanford.edu>";
 declare avg_rect license "MIT-style STK-4.3 license";
 avg_rect(period, x) = x : ba.slidingMean(rint(period * ma.SR));
@@ -2980,7 +3224,7 @@ avg_rect(period, x) = x : ba.slidingMean(rint(period * ma.SR));
 // that is, tau is the integral of the filter's impulse response. This
 // response is slower to reach the final value but has less ripples in
 // non-steady signals.
-// 
+//
 // #### Usage
 //
 // ```
@@ -2989,7 +3233,7 @@ avg_rect(period, x) = x : ba.slidingMean(rint(period * ma.SR));
 //
 // Where:
 //
-// * `period` is the time, in seconds, for the system to decay by 1/e, 
+// * `period` is the time, in seconds, for the system to decay by 1/e,
 // or to reach 1-1/e of its final value.
 //
 // #### Reference
@@ -2997,8 +3241,8 @@ avg_rect(period, x) = x : ba.slidingMean(rint(period * ma.SR));
 // <https://ccrma.stanford.edu/~jos/mdft/Exponentials.html>
 //-----------------------------------------------------------------------------
 declare avg_tau author "Dario Sanfilippo and Julius O. Smith III";
-declare avg_tau copyright "Copyright (C) 2020 Dario Sanfilippo 
-      <sanfilippo.dario@gmail.com> and 
+declare avg_tau copyright "Copyright (C) 2020 Dario Sanfilippo
+      <sanfilippo.dario@gmail.com> and
        2003-2020 by Julius O. Smith III <jos@ccrma.stanford.edu>";
 declare avg_tau license "MIT-style STK-4.3 license";
 avg_tau(period, x) = fi.lptau(period, x);
@@ -3006,9 +3250,9 @@ avg_tau(period, x) = fi.lptau(period, x);
 
 //----------------------------`(fi.)avg_t60`-------------------------------------
 // Averaging function based on a one-pole filter and the t60 response time.
-// This response is particularly useful when the system is required to 
+// This response is particularly useful when the system is required to
 // reach the final value after about `period` seconds.
-// 
+//
 // #### Usage
 //
 // ```
@@ -3017,7 +3261,7 @@ avg_tau(period, x) = fi.lptau(period, x);
 //
 // Where:
 //
-// * `period` is the time, in seconds, for the system to decay by 1/1000, 
+// * `period` is the time, in seconds, for the system to decay by 1/1000,
 // or to reach 1-1/1000 of its final value.
 //
 // #### Reference
@@ -3025,8 +3269,8 @@ avg_tau(period, x) = fi.lptau(period, x);
 // <https://ccrma.stanford.edu/~jos/mdft/Audio_Decay_Time_T60.html>
 //-----------------------------------------------------------------------------
 declare avg_t60 author "Dario Sanfilippo and Julius O. Smith III";
-declare avg_t60 copyright "Copyright (C) 2020 Dario Sanfilippo 
-      <sanfilippo.dario@gmail.com> and 
+declare avg_t60 copyright "Copyright (C) 2020 Dario Sanfilippo
+      <sanfilippo.dario@gmail.com> and
        2003-2020 by Julius O. Smith III <jos@ccrma.stanford.edu>";
 declare avg_t60 license "MIT-style STK-4.3 license";
 avg_t60(period, x) = fi.lpt60(period, x);
@@ -3046,7 +3290,7 @@ avg_t60(period, x) = fi.lpt60(period, x);
 //
 // Where:
 //
-// * `period` is the time, in seconds, for the system to decay by 1/e^2.2, 
+// * `period` is the time, in seconds, for the system to decay by 1/e^2.2,
 // or to reach 1-1/e^2.2 of its final value.
 //
 // #### Reference
@@ -3057,7 +3301,231 @@ declare avg_t19 copyright "Copyright (C) 2020 Dario Sanfilippo
       <sanfilippo.dario@gmail.com> and
        2003-2020 by Julius O. Smith III <jos@ccrma.stanford.edu>";
 declare avg_t19 license "MIT-style STK-4.3 license";
-avg_t19(period, x) = fi.lpt19(period, x); 
+avg_t19(period, x) = fi.lpt19(period, x);
+
+
+//============================Kalman Filters===================================
+//=============================================================================
+//
+// Functions related to the Kalman filter.
+
+kalmanEnv = environment {
+
+    matMul = la.matMul;
+
+    // Predicts the next state.
+    // * `N`: State size
+    // * `M`: Measurement size
+    // * `F`: State transition matrix (NxN)
+    // * `B`: Control input matrix (NxM)
+    // Implicit arguments:
+    // * `x`: Current state (Nx1)
+    // * `u`: Control input (Mx1)
+    predictState(N, M, F, B) = si.vecOp((Fx, Bu), +)
+    with {
+        // Fx = F @ x, where F is NxN and x is Nx1
+        Fx = matMul(N, N, N, 1, F, si.bus(N));
+        
+        // Bu = B @ u, where B is NxM and u is Mx1
+        Bu = matMul(N, M, M, 1, B, si.bus(M));
+    };
+
+    // Predicts the covariance matrix for the next state.
+    // * `N`: State size
+    // * `F`: State transition matrix (NxN)
+    // * `Q`: Process noise covariance matrix (NxN)
+    // * `P`: Current state covariance matrix (NxN)
+    // No implict arguments.
+    predictCovariance(N, F, Q, P) = si.vecOp((FPF_T, Q), +)
+    with {
+        // FP = F @ P
+        FP = matMul(N, N, N, N, F, P);
+        
+        // FPF_T = FP @ F^T, where FP is NxN and F^T is NxN
+        FPF_T = matMul(N, N, N, N, FP, la.transpose2(N, N, F));
+    };
+
+    // Calculates the Kalman gain (NxM).
+    // * `N`: State size
+    // * `M`: Measurement size
+    // * `H`: Observation matrix (MxN)
+    // * `R`: Measurement noise covariance matrix (MxM)
+    // Implict arguments:
+    // * `P_pred`: Predicted covariance matrix (NxN)
+    kalmanGain(N, M, H, R) = P_pred <: 
+        matMul(N, M, M, M, matMul(N, N, N, M, P_pred, H_T), S_inv)
+    with {
+        P_pred = si.bus(N*N);
+        // H_T = Transpose of H
+        H_T = la.transpose2(M, N, H);
+        
+        // HP = H * P_pred, where H is MxN and P_pred is NxN
+        HP = matMul(M, N, N, N, H, P_pred);
+        
+        // HPH_T = HP @ H^T, where HP is MxN and H^T is NxM, resulting in MxM
+        HPH_T = matMul(M, N, N, M, HP, H_T);
+        
+        // S_inv = inverse(HPH_T + R)
+        S_inv = si.vecOp((HPH_T, R), +) : la.inverse(M);
+    };
+
+    // Updates the state estimate based on the Kalman gain and measurement.
+    // * `N`: State size
+    // * `M`: Measurement size
+    // * `H`: Observation matrix (MxN)
+    // Implicit arguments:
+    // * `K`: Kalman gain matrix (NxM)
+    // * `x_pred`: (Nx1)
+    // * `z`: (Mx1)
+    updateState(N, M, H) = si.bus(N*M), si.bus(N), si.bus(M) <: 
+        si.vecOp((get_x_pred, K_mul_residual(N, M, H)), +)
+    with {
+        get_x_pred = par(i, N*M, !), par(i, N, _), par(i, M, !);
+    };
+
+    // todo: find a way to not use mySwap.
+    // Its purpose is to route K, x, z into K, z, x
+    mySwap(N, M) = si.bus(N*M), si.bus(N), si.bus(M) <: 
+        select_K, select_z, select_x_pred
+    with {
+        select_K = par(i, N*M, _), par(i, N, !), par(i, M, !);
+        select_x_pred = par(i, N*M, !), par(i, N, _), par(i, M, !);
+        select_z = par(i, N*M, !), par(i, N, !), par(i, M, _);
+    };
+
+    K_mul_residual(N, M, H) = mySwap(N, M) : matMul(N, M, M, 1, si.bus(N*M), residual)
+    with {
+        // residual = z - H @ x_pred, where z is Mx1 and H @ x_pred is Mx1
+        residual = si.vecOp((si.bus(M), matMul(M, N, N, 1, H, si.bus(N))), -);
+    };
+
+    // Updates the covariance matrix based on the Kalman gain and observation matrix.
+    // * `N`: State size
+    // * `M`: Measurement size
+    // * `H`: Observation matrix (MxN)
+    // * `K`: Kalman gain matrix (NxM)
+    // * `P_pred`: Predicted covariance matrix (NxN)
+    // No implict arguments.
+    updateCovariance(N, M, H, K, P_pred) = 
+        matMul(N, N, N, N, I_minus_KH, P_pred)
+    with {
+        // KH = K @ H, where K is NxM and H is MxN
+        KH = matMul(N, M, M, N, K, H);
+            
+        // I_minus_KH = I - K @ H, where both are NxN
+        I_minus_KH = si.vecOp((la.identity(N), KH), -);
+    };
+
+    // implict arguments:
+    // * `u`: Control input (Mx1)
+    // * `z`: Measurement signal (Mx1)
+    kalmanFilter(N, M, B, R, H, Q, F, reset) = (p, x, u, z <: pNew, xNew) ~ (pBus, xBus) : pCut, xBus
+    with {
+        doReset = reset > 0;
+
+        pBus = si.bus(N*N);
+        pCut = par(i, N*N, !);
+        pInit = la.diag(N, par(i, N, 100));  // large value for initial uncertainty in P.
+        p = pBus, pInit : ba.selectbus(N*N, 2, doReset);
+
+        xBus = si.bus(N);
+        xCut = par(i, N, !);
+        xInit = par(i, N, 0);  // initialize with zeros.
+        x = xBus, xInit : ba.selectbus(N, 2, doReset);
+
+        u = si.bus(M);
+        z = si.bus(M);
+
+        uCut = par(i, M, !);
+        zCut = par(i, M, !);
+
+        predCov = predictCovariance(N, F, Q, pBus);
+        gain = kalmanGain(N, M, H, R);
+
+        xNew = pBus, xBus, u, z : updateState(N, M, H, gain(predCov), predictState(N, M, F, B, xBus, u), z);        
+        pNew = pBus, xCut, uCut, zCut : predCov <: updateCovariance(N, M, H, gain(pBus), pBus);
+    };
+};
+
+//-----------`(fi.)kalman`----------------------------------------------------
+// The Kalman filter. It returns the state (a bus of size `N`).
+// Note that the only compile-time constant arguments are `N` and `M`.
+// Other arguments are capitalized because they're matrices, and it makes
+// reading them much easier.
+//
+// #### Usage
+// ```
+// kalman(N, M, B, R, H, Q, F, reset, u, z) : si.bus(N)
+// ```
+//
+// Where:
+//
+// * `N`: State size (constant int)
+// * `M`: Measurement size (constant int)
+// * `B`: Control input matrix (NxM)
+// * `R`: Measurement noise covariance matrix (MxM)
+// * `H`: Observation matrix (MxN)
+// * `Q`: Process noise covariance matrix (NxN)
+// * `F`: State transition matrix (NxN)
+// * `reset`: Reset trigger. Whenever `reset>0`, the internal state `x` and covariance matrix `P` are reset.
+// * `u`: Control input (Mx1)
+// * `z`: Measurement signal (Mx1)
+//
+// #### Example test programs
+// Demo 1 `(N=1, M=1)` (don't listen, just use oscilloscope):
+//
+// ```
+// process = fi.kalman(N, M, B, R, H, Q, F, reset, u, z) : it.interpolate_linear(filteredAmt, z)
+// with {
+//    B = 1.;
+//    R = 0.1;
+//    H = 1;
+//    Q = .01; 
+//    F = la.identity(N);
+//    reset = button("reset");
+//
+//    // Dimensions
+//    N = 1; // State size
+//    M = 1; // Measurement size
+//
+//    freq = hslider("Freq", 1, 0.01, 10, .01);
+//    u = 0.; // constant input
+//    trueState = os.osc(freq)*.5 + u;
+//    noiseGain = hslider("Noise Gain", .1, 0, 1, .01);
+//
+//    filteredAmt = hslider("Filter Amount", 1, 0, 1, .01) : si.smoo;
+//
+//    measurementNoise = no.noise*noiseGain;
+//    z = trueState + measurementNoise; // Observed state
+// };
+// ```
+//
+// Demo 2 `(N=2, M=1)` (don't listen, just use oscilloscope)
+//
+// ```
+// process = fi.kalman(N, M, B, R, H, Q, F, reset, u, z)
+// with {
+//     B = par(i, N, 0);
+//     R = (0.1);
+//     H = (1, 0);
+//     Q = la.diag(2, par(i, N, .1));
+//     F = la.identity(N);
+//     reset = 0;
+//     u = si.bus(M);
+//     z = si.bus(M);
+// 
+//     // Dimensions
+//     N = 2; // State size
+//     M = 1; // Measurement size
+// };
+// ```
+// #### References
+// * <https://en.wikipedia.org/wiki/Kalman_filter>
+// * <https://www.cs.unc.edu/~welch/kalman/index.html>
+//----------------------------------------------------------------------------
+declare kalman author "David Braun";
+declare kalman license "MIT License";
+kalman = kalmanEnv.kalmanFilter;
 
 
 /*******************************************************************************
@@ -3065,45 +3533,45 @@ avg_t19(period, x) = fi.lpt19(period, x);
 
 ## STK 4.3 License
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of 
-this software and associated documentation files (the "Software"), to deal in 
-the Software without restriction, including without limitation the rights to 
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies 
-of the Software, and to permit persons to whom the Software is furnished to do 
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
 so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all 
+The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
-Any person wishing to distribute modifications to the Software is asked to send 
-the modifications to the original developer so that they can be incorporated 
-into the canonical version.  For software copyrighted by Julius O. Smith III, 
-email your modifications to <jos@ccrma.stanford.edu>.  This is, however, not a 
+Any person wishing to distribute modifications to the Software is asked to send
+the modifications to the original developer so that they can be incorporated
+into the canonical version.  For software copyrighted by Julius O. Smith III,
+email your modifications to <jos@ccrma.stanford.edu>.  This is, however, not a
 binding provision of this license.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE 
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 --------------------------------------------------------------------------------
 
 ## LGPL License
 
-This program is free software; you can redistribute it and/or modify it under 
-the terms of the GNU Lesser General Public License as published by the Free 
-Software Foundation; either version 2.1 of the License, or (at your option) any 
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the Free
+Software Foundation; either version 2.1 of the License, or (at your option) any
 later version.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY 
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU Lesser General Public License along 
-with the GNU C Library; if not, write to the Free Software Foundation, Inc., 
+You should have received a copy of the GNU Lesser General Public License along
+with the GNU C Library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
 
 --------------------------------------------------------------------------------

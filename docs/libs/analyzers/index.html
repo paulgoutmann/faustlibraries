@@ -15,7 +15,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
         <link href="../../css/extra.css" rel="stylesheet">
 
-        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/jquery-3.6.0.min.js" defer></script>
         <script src="../../js/bootstrap.min.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
@@ -24,7 +24,7 @@
     <body>
         <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" href="../.."><img src="../../img/faustText.svg" width="150px"> Libraries</a>
+                <a class="navbar-brand" href="../.."><img src="../../img/faustText.svg" width="150px"> </a>
                 <!-- Expander button -->
                 <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
@@ -112,6 +112,10 @@
                                     
 <li>
     <a href="../interpolators/" class="dropdown-item"> interpolators </a>
+</li>
+                                    
+<li>
+    <a href="../linearalgebra/" class="dropdown-item"> linearalgebra </a>
 </li>
                                     
 <li>
@@ -660,7 +664,7 @@ mth_octave_analyzer_default = mth_octave_analyzer6e;
 </code></pre>
 <p>Where:</p>
 <ul>
-<li><code>O</code>: order of filter used to split each frequency band into two</li>
+<li><code>O</code>: (odd) order of filter used to split each frequency band into two</li>
 <li><code>M</code>: number of band-slices per octave</li>
 <li><code>ftop</code>: highest band-split crossover frequency (e.g., 20 kHz)</li>
 <li><code>N</code>: total number of bands (including dc and Nyquist)</li>
@@ -820,7 +824,7 @@ band-split frequencies are passed explicitly as arguments.</p>
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2019-2024 <a href="https://www.grame.fr">Grame-CNCM</a></p>
+                <p>Copyright &copy; 2019-2025 <a href="https://www.grame.fr">Grame-CNCM</a></p>
         </footer>
         <script>
             var base_url = "../..",

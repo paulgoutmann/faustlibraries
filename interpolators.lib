@@ -98,7 +98,8 @@
 // ```
 //
 // #### References
-// * <https://github.com/grame-cncm/faustlibraries/blob/master/interpolators.lib>
+//
+// <https://github.com/grame-cncm/faustlibraries/blob/master/interpolators.lib>
 //########################################################################################
 
 /************************************************************************
@@ -139,7 +140,7 @@ ma = library("maths.lib");
 si = library("signals.lib");
 
 declare name "Faust Interpolator Library";
-declare version "1.3.1";
+declare version "1.4.0";
 
 // Produces 0 until the first trig, then 1 until the next trig (which outputs a 0 sample to reset), and so on
 reset(trig) = hold * (trig <= trig')
@@ -220,6 +221,7 @@ doubleprecision quadprecision decrease_modulo(trig, step, length) = raise_modulo
 // <https://github.com/jamoma/JamomaCore/blob/master/Foundation/library/includes/TTInterpolate.h>
 //
 //--------------------------------------------
+
 declare interpolate_linear author "Stéphane Letz";
 declare interpolate_linear licence "MIT";
 
@@ -399,7 +401,7 @@ with {
 
 
 //-------`(it.)interpolator_cubic`----------
-// Cubic interpolator for a 'gen' circuit triggered by an 'idv' input to generate values
+// Cubic interpolator for a 'gen' circuit triggered by an 'idv' input to generate values.
 //
 // #### Usage
 //
@@ -454,10 +456,80 @@ with {
                     interpolator_null(gen, idv));
 };
 
+//======= Generic piecewise linear interpolation ===============================
+//==============================================================================
+//
+//-------`(it.)lerp`------------------------------------------------------------
+// Linear interpolation between two points.
+//
+// #### Usage
+//
+// ```
+// lerp(x0, x1, y0, y1, x) : si.bus(1);
+// ```
+//
+// Where:
+//
+// * `x0`: x-coordinate origin
+// * `x1`: x-coordinate destination
+// * `y0`: y-coordinate origin
+// * `y1`: y-coordinate destination
+// * `x`: x-coordinate input
+//------------------------------------------------------------------------------
+declare lerp author "Dario Sanfilippo";
+declare lerp licence "MIT";
+lerp(x0, x1, y0, y1, x) = y
+    with {
+        xRange = x1 - x0;
+        yRange = y1 - y0;
+        nonZeroDomain(x) = ba.if(x >= 0, max(ma.EPSILON, x), min(0 - ma.EPSILON, x));
+        c = (x - x0) / nonZeroDomain(xRange);
+        y = c * yRange + y0;
+    };
+//------------------------------------------------------------------------------
+
+//-------`(it.)piecewise`-------------------------------------------------------
+// Linear piecewise interpolation between N points.
+//
+// #### Usage
+//
+// ```
+// piecewise(xList, yList, x) : si.bus(1);
+// ```
+//
+// Where:
+//
+// * `xList`: x-coordinates list
+// * `yList`: y-coordinates list
+// * `x`: x-coordinate input
+//
+// #### Example test program
+// The code below will output the values of linear segments going through the
+// y coordinates as the input goes from -5 to 5:
+// 
+// ```
+// x = hslider("x", -5, -5.0, 5.0, .001);
+// process = it.piecewise((-5, -3, 0, 3, 5), (2, 0, 3, -3, -2), x);
+// ```
+//
+//------------------------------------------------------------------------------
+declare piecewise author "Dario Sanfilippo";
+declare piecewise licence "MIT";
+piecewise(xList, yList, x) = y , assert
+    with {
+        N = outputs(xList);
+        M = outputs(yList);
+        assert = par(i, N, 0) : si.block(M);
+        xPoint(i) = ba.selectn(N, i, xList);
+        yPoint(i) = ba.selectn(M, i, yList);
+        pieceSel = par(i, N - 2, (xPoint(i) <= x) & (x < xPoint(i + 1))) , x >= xPoint(N - 2) : par(i, N - 1, *(i)) :> _;
+        y = lerp(xPoint(pieceSel), xPoint(pieceSel + 1), yPoint(pieceSel), yPoint(pieceSel + 1), x);
+    };
+
 //=========================Lagrange based interpolators====================================
 //========================================================================================
 
-//-------`(it.)lagrangeCoeffs(N, xCoordsList)` ---------------------------------------------
+//-------`(it.)lagrangeCoeffs`---------------------------------------------
 //
 // This is a function to generate N + 1 coefficients for an Nth-order Lagrange
 // basis polynomial with arbitrary spacing of the points.
@@ -496,7 +568,8 @@ lagrange_h(N, x) = lagrangeCoeffs(N, xCoord, x)
         xCoord = par(i, N + 1, i);
     };
 
-//-------`(it.)lagrangeInterpolation(N, xCoordsList)` --------------------------------------
+
+//-------`(it.)lagrangeInterpolation`--------------------------------------
 //
 // Nth-order Lagrange interpolator to interpolate between a set of arbitrarily spaced N + 1 points.
 //
@@ -521,19 +594,19 @@ lagrange_h(N, x) = lagrangeCoeffs(N, xCoord, x)
 // xCoordsList = (0, 1, 2, 3);
 // x = N / 2.0;
 // yCoords = 2, 5, -1, 3;
-// process = x, yCoords : lagrangeInterpolation(N, xCoordsList);
+// process = x, yCoords : it.lagrangeInterpolation(N, xCoordsList);
 // ```
 //
 // which outputs ~1.938.
 //
-// Example: output the dashed curve showed on the Wikipedia page (top figure, https://en.wikipedia.org/wiki/Lagrange_polynomial):
+// Example: output the dashed curve showed on the Wikipedia page (top figure in <https://en.wikipedia.org/wiki/Lagrange_polynomial>):
 //
 // ```
 // N = 3;
 // xCoordsList = (-9, -4, -1, 7);
 // x = os.phasor(16, 1) - 9;
 // yCoords = 5, 2, -2, 9;
-// process = x, yCoords : lagrangeInterpolation(N, xCoordsList);
+// process = x, yCoords : it.lagrangeInterpolation(N, xCoordsList);
 // ```
 //
 // #### Reference
@@ -551,7 +624,8 @@ lagrangeInterpolation(N, xCoords, x) = si.dot(N + 1, lagrangeCoeffs(N, xCoords, 
 // The following definition for uniformely-spaced points interpolation is kept for back-compatibility
 lagrangeN(N, x) = si.dot(N + 1, lagrange_h(N, x));
 
-//-------`(it.)frdtable(N, S)` --------------------------------------------
+
+//-------`(it.)frdtable`--------------------------------------------
 //
 // Look-up circular table with Nth-order Lagrange interpolation for fractional
 // indexes. The index is wrapped-around and the table is cycles for an index
@@ -567,7 +641,7 @@ lagrangeN(N, x) = si.dot(N + 1, lagrange_h(N, x));
 //
 // * `N`: Lagrange interpolation order, known at compile-time
 // * `S`: table size in samples, known at compile-time
-// * `init`: signal for table initialisation
+// * `init`: the initial table content, known at compile-time
 // * `idx`: fractional index wrapped-around 0 and S
 //
 // #### Example test program
@@ -597,7 +671,7 @@ frdtable(N, S, init, idx) =
     };
 
 
-//-------`(it.)frwtable(N, S)` --------------------------------------------
+//-------`(it.)frwtable`--------------------------------------------
 //
 // Look-up updatable circular table with Nth-order Lagrange interpolation for
 // fractional indexes. The index is wrapped-around and the table is circular
@@ -613,7 +687,7 @@ frdtable(N, S, init, idx) =
 //
 // * `N`: Lagrange interpolation order, known at compile-time
 // * `S`: table size in samples, known at compile-time
-// * `init`: constant for table initialisation, known at compile-time
+// * `init`: the initial table content, known at compile-time
 // * `w_idx`: it should be an INT between 0 and S - 1
 // * `x`: input signal written on the w_idx positions
 // * `r_idx`: fractional index wrapped-around 0 and S
@@ -629,7 +703,7 @@ frdtable(N, S, init, idx) =
 // rIdx = os.phasor(S, 300);
 // wIdx = ba.period(S);
 // process = rwtable(S, os.sinwaveform(S), wIdx, os.sinwaveform(S), int(rIdx)) ,
-//           frwtable(N, S, os.sinwaveform(S), wIdx, os.sinwaveform(S), rIdx);
+//           it.frwtable(N, S, os.sinwaveform(S), wIdx, os.sinwaveform(S), rIdx);
 // ```
 //------------------------------------------------------------
 
@@ -645,11 +719,10 @@ frwtable(N, S, init, w_idx, x, r_idx) =
         i_idx = int(r_idx);
     };
 
-
 //=========================Misc functions=================================================
 //========================================================================================
 
-//---------------`(it.)remap` ---------------------------------------------
+//---------------`(it.)remap`---------------------------------------------
 // Linearly map from an input domain to an output range.
 //
 // #### Usage
@@ -667,7 +740,8 @@ frwtable(N, S, init, w_idx, x, r_idx) =
 //
 // Note that having `from1` == `from2` in the mapping will cause a division by zero that has to be taken in account.
 //
-// Example: An oscillator remapped from [-1., 1.] to [100., 1000.]
+// #### Example test program
+// An oscillator remapped from [-1., 1.] to [100., 1000.]:
 // ```
 // os.osc(440) : it.remap(-1., 1., 100., 1000.)
 // ```

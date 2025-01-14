@@ -15,7 +15,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
         <link href="../../css/extra.css" rel="stylesheet">
 
-        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/jquery-3.6.0.min.js" defer></script>
         <script src="../../js/bootstrap.min.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
@@ -24,7 +24,7 @@
     <body>
         <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" href="../.."><img src="../../img/faustText.svg" width="150px"> Libraries</a>
+                <a class="navbar-brand" href="../.."><img src="../../img/faustText.svg" width="150px"> </a>
                 <!-- Expander button -->
                 <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
@@ -112,6 +112,10 @@
                                     
 <li>
     <a href="../interpolators/" class="dropdown-item"> interpolators </a>
+</li>
+                                    
+<li>
+    <a href="../linearalgebra/" class="dropdown-item"> linearalgebra </a>
 </li>
                                     
 <li>
@@ -819,7 +823,7 @@ Use <code>sawN</code> and its derivatives for audio oscillators with suppressed 
 </ul>
 <hr />
 <h3 id="oslf_triangle"><code>(os.)lf_triangle</code></h3>
-<p>Positive unit-amplitude LF triangle wave.
+<p>Zero-mean unit-amplitude LF triangle wave.
 <code>lf_triangle</code> is a standard Faust function.</p>
 <h4 id="usage_20">Usage</h4>
 <pre><code>lf_triangle(freq) : _
@@ -1410,6 +1414,7 @@ There are two versions of the "index oscillators":</p>
 </ul>
 <p>The "res oscillators" have a resonant frequency.
 "res" is the frequency of resonance as a factor of the fundamental pitch.</p>
+<p>For the <code>fund</code> waveform, use a low-frequency oscillator without anti-aliasing such as <code>os.lf_saw</code>.</p>
 <hr />
 <h3 id="osczsaw"><code>(os.)CZsaw</code></h3>
 <p>Oscillator that mimics the Casio CZ saw oscillator.
@@ -1618,7 +1623,7 @@ with it's phase aligned to <code>fund:sin</code>.
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2019-2024 <a href="https://www.grame.fr">Grame-CNCM</a></p>
+                <p>Copyright &copy; 2019-2025 <a href="https://www.grame.fr">Grame-CNCM</a></p>
         </footer>
         <script>
             var base_url = "../..",

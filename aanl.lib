@@ -42,7 +42,7 @@ ba = library("basics.lib");
 ma = library("maths.lib");
 
 declare name "Faust Antialiased Nonlinearities";
-declare version "1.3.0";
+declare version "1.4.0";
 
 //==============================Auxiliary Functions=======================================
 //========================================================================================
@@ -339,7 +339,7 @@ parabolic2(x) = ADAA2(EPS, f, F1, F2, x)
 //
 // First-order ADAA hyperbolic saturator.
 //
-// The domain of this function is ℝ; its theoretical range is ]-1.0; 1.0[.
+// The domain of this function is ℝ; its theoretical range is [-1.0; 1.0].
 //
 // #### Usage
 // ```
@@ -362,7 +362,7 @@ hyperbolic(x) = ADAA1(EPS, f, F1, x)
 //
 // Second-order ADAA hyperbolic saturator.
 //
-// The domain of this function is ℝ; its theoretical range is ]-1.0; 1.0[.
+// The domain of this function is ℝ; its theoretical range is [-1.0; 1.0].
 //
 // #### Usage
 // ```
@@ -387,7 +387,7 @@ hyperbolic2(x) = ADAA2(EPS, f, F1, F2, x)
 //
 // First-order ADAA sin(atan()) saturator.
 //
-// The domain of this function is ℝ; its theoretical range is ]-1.0; 1.0[.
+// The domain of this function is ℝ; its theoretical range is [-1.0; 1.0].
 //
 // #### Usage
 // ```
@@ -413,7 +413,7 @@ sinarctan(x) = ADAA1(EPS, f, F1, x)
 //
 // Second-order ADAA sin(atan()) saturator.
 //
-// The domain of this function is ℝ; its theoretical range is ]-1.0; 1.0[.
+// The domain of this function is ℝ; its theoretical range is [-1.0; 1.0].
 //
 // #### Usage
 // ```
@@ -436,11 +436,84 @@ sinarctan2(x) = ADAA2(EPS, f, F1, F2, x)
       };
 
 
+softclipEnv = environment {
+    // this non anti-aliased version exists in misceffects.lib
+    softclip(x) = ba.ifNcNo(2, 1, 
+        absX < 1/3, 2*x,
+        absX < 2/3, ma.signum(x)*(3-(2-absX*3)^2)/3,
+        ma.signum(x)
+        )
+    with {
+        s = ba.if(x>0, 1, -1); // faster than ma.signum(x)
+        absX = abs(x);
+    };
+    EPS = 1.0 / ma.SR;
+
+    F1(x) = ba.ifNcNo(2, 1,
+        absX < 1/3, x^2,
+        absX < 2/3, -1.*absX/3+2*x^2-absX^3+1/27,
+        absX - 7/27
+    )
+    with {
+        absX = abs(x);
+    };
+
+    F2(x) = ba.ifNcNo(2, 1,
+        absX < 1/3, (2/3)*(x^3),
+        absX < 2/3, s*((-1/6)*(x^2)-(3/4)*(x^4)+1/324) + (4/3)*(x^3),
+        s*((0.5)*(x^2) - 5/108)
+    )
+    with {
+        s = ba.if(x>0, 1, -1); // faster than ma.signum(x)
+        absX = abs(x);
+    };
+
+    softclipQuadratic1 = ADAA1(EPS, softclip, F1);
+    softclipQuadratic2 = ADAA2(EPS, softclip, F1, F2);
+};
+
+
+//-------`(aa.)softclipQuadratic1`---------------------
+//
+// First-order ADAA quadratic softclip.
+//
+// The domain of this function is ℝ; its theoretical range is [-1.0; 1.0].
+//
+// #### Usage
+// ```
+// _ : aa.softclipQuadratic1 : _
+// ```
+//----------------------------------------------
+declare softclipQuadratic1 author "David Braun";
+declare softclipQuadratic1 copyright "Copyright (C) 2024 David Braun";
+declare softclipQuadratic1 license "MIT license";
+
+softclipQuadratic1 = softclipEnv.softclipQuadratic1;
+
+
+//-------`(aa.)softclipQuadratic2`---------------------
+//
+// Second-order ADAA quadratic softclip.
+//
+// The domain of this function is ℝ; its theoretical range is [-1.0; 1.0].
+//
+// #### Usage
+// ```
+// _ : aa.softclipQuadratic2 : _
+// ```
+//----------------------------------------------
+declare softclipQuadratic2 author "David Braun";
+declare softclipQuadratic2 copyright "Copyright (C) 2024 David Braun";
+declare softclipQuadratic2 license "MIT license";
+
+softclipQuadratic2 = softclipEnv.softclipQuadratic2;
+
+
 //-------`(aa.)tanh1`---------------------
 //
 // First-order ADAA tanh() saturator.
 //
-// The domain of this function is ℝ; its theoretical range is ]-1.0; 1.0[.
+// The domain of this function is ℝ; its theoretical range is [-1.0; 1.0].
 //
 // #### Usage
 // ```
@@ -463,7 +536,7 @@ tanh1(x) = ADAA1(EPS, f, F1, x)
 //
 // First-order ADAA atan().
 //
-// The domain of this function is ℝ; its theoretical range is ]-π/2.0; π/2.0[.
+// The domain of this function is ℝ; its theoretical range is [-π/2.0; π/2.0].
 //
 // #### Usage
 // ```
@@ -856,7 +929,7 @@ tangent(x) = ADAA1(EPS, f, F1, x)
 //
 // First-order ADAA atanh(). 
 //
-// The domain of this function is ]-1.0; 1.0[; its theoretical range is ℝ.
+// The domain of this function is [-1.0; 1.0]; its theoretical range is ℝ.
 //
 // #### Usage
 // ```
@@ -879,7 +952,7 @@ atanh1(x) = ADAA1(EPS, f, F1, x)
 //
 // Second-order ADAA atanh().
 //
-// The domain of this function is ]-1.0; 1.0[; its theoretical range is ℝ.
+// The domain of this function is [-1.0; 1.0]; its theoretical range is ℝ.
 //
 // #### Usage
 // ```

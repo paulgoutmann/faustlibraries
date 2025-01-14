@@ -15,7 +15,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
         <link href="../css/extra.css" rel="stylesheet">
 
-        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/jquery-3.6.0.min.js" defer></script>
         <script src="../js/bootstrap.min.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
@@ -24,7 +24,7 @@
     <body>
         <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" href=".."><img src="../img/faustText.svg" width="150px"> Libraries</a>
+                <a class="navbar-brand" href=".."><img src="../img/faustText.svg" width="150px"> </a>
                 <!-- Expander button -->
                 <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
@@ -112,6 +112,10 @@
                                     
 <li>
     <a href="interpolators/" class="dropdown-item"> interpolators </a>
+</li>
+                                    
+<li>
+    <a href="linearalgebra/" class="dropdown-item"> linearalgebra </a>
 </li>
                                     
 <li>
@@ -271,6 +275,10 @@
               <ul class="nav flex-column">
               </ul>
             </li>
+            <li class="nav-item" data-level="2"><a href="#linearalgebra" class="nav-link">linearalgebra</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
             <li class="nav-item" data-level="2"><a href="#maths" class="nav-link">maths</a>
               <ul class="nav flex-column">
               </ul>
@@ -378,6 +386,8 @@
 <a href="aanl/#aahyperbolic2">(aa.)hyperbolic2</a> &nbsp; &nbsp;
 <a href="aanl/#aasinarctan">(aa.)sinarctan</a> &nbsp; &nbsp;
 <a href="aanl/#aasinarctan2">(aa.)sinarctan2</a> &nbsp; &nbsp;
+<a href="aanl/#aasoftclipquadratic1">(aa.)softclipQuadratic1</a> &nbsp; &nbsp;
+<a href="aanl/#aasoftclipquadratic2">(aa.)softclipQuadratic2</a> &nbsp; &nbsp;
 <a href="aanl/#aatanh1">(aa.)tanh1</a> &nbsp; &nbsp;
 <a href="aanl/#aaarctan">(aa.)arctan</a> &nbsp; &nbsp;
 <a href="aanl/#aaarctan2">(aa.)arctan2</a> &nbsp; &nbsp;
@@ -450,6 +460,7 @@
 <a href="basics/#baline">(ba.)line</a> &nbsp; &nbsp;
 <a href="basics/#batempo">(ba.)tempo</a> &nbsp; &nbsp;
 <a href="basics/#baperiod">(ba.)period</a> &nbsp; &nbsp;
+<a href="basics/#baspulse">(ba.)spulse</a> &nbsp; &nbsp;
 <a href="basics/#bapulse">(ba.)pulse</a> &nbsp; &nbsp;
 <a href="basics/#bapulsen">(ba.)pulsen</a> &nbsp; &nbsp;
 <a href="basics/#bacycle">(ba.)cycle</a> &nbsp; &nbsp;
@@ -471,11 +482,15 @@
 <a href="basics/#baselector">(ba.)selector</a> &nbsp; &nbsp;
 <a href="basics/#baselect2stereo">(ba.)select2stereo</a> &nbsp; &nbsp;
 <a href="basics/#baselectn">(ba.)selectn</a> &nbsp; &nbsp;
+<a href="basics/#baselectbus">(ba.)selectbus</a> &nbsp; &nbsp;
+<a href="basics/#baselectxbus">(ba.)selectxbus</a> &nbsp; &nbsp;
 <a href="basics/#baselectmulti">(ba.)selectmulti</a> &nbsp; &nbsp;
 <a href="basics/#baselectoutn">(ba.)selectoutn</a> &nbsp; &nbsp;
 <a href="basics/#balatch">(ba.)latch</a> &nbsp; &nbsp;
 <a href="basics/#basandh">(ba.)sAndH</a> &nbsp; &nbsp;
+<a href="basics/#batandh">(ba.)tAndH</a> &nbsp; &nbsp;
 <a href="basics/#badownsample">(ba.)downSample</a> &nbsp; &nbsp;
+<a href="basics/#badownsamplecv">(ba.)downSampleCV</a> &nbsp; &nbsp;
 <a href="basics/#bapeakhold">(ba.)peakhold</a> &nbsp; &nbsp;
 <a href="basics/#bapeakholder">(ba.)peakholder</a> &nbsp; &nbsp;
 <a href="basics/#bakr2ar">(ba.)kr2ar</a> &nbsp; &nbsp;
@@ -490,6 +505,7 @@
 <a href="basics/#batoggle">(ba.)toggle</a> &nbsp; &nbsp;
 <a href="basics/#baon_and_off">(ba.)on_and_off</a> &nbsp; &nbsp;
 <a href="basics/#babitcrusher">(ba.)bitcrusher</a> &nbsp; &nbsp;
+<a href="basics/#bamulaw_bitcrusher">(ba.)mulaw_bitcrusher</a> &nbsp; &nbsp;
 <a href="basics/#baslidingreduce">(ba.)slidingReduce</a> &nbsp; &nbsp;
 <a href="basics/#baslidingsum">(ba.)slidingSum</a> &nbsp; &nbsp;
 <a href="basics/#baslidingsump">(ba.)slidingSump</a> &nbsp; &nbsp;
@@ -555,12 +571,15 @@
 <a href="demos/#dmcrybaby_demo">(dm.)crybaby_demo</a> &nbsp; &nbsp;
 <a href="demos/#dmflanger_demo">(dm.)flanger_demo</a> &nbsp; &nbsp;
 <a href="demos/#dmphaser2_demo">(dm.)phaser2_demo</a> &nbsp; &nbsp;
+<a href="demos/#dmtapestop_demo">(dm.)tapeStop_demo</a> &nbsp; &nbsp;
 <a href="demos/#dmfreeverb_demo">(dm.)freeverb_demo</a> &nbsp; &nbsp;
 <a href="demos/#dmstereo_reverb_tester">(dm.)stereo_reverb_tester</a> &nbsp; &nbsp;
 <a href="demos/#dmfdnrev0_demo">(dm.)fdnrev0_demo</a> &nbsp; &nbsp;
 <a href="demos/#dmzita_rev_fdn_demo">(dm.)zita_rev_fdn_demo</a> &nbsp; &nbsp;
 <a href="demos/#dmzita_light">(dm.)zita_light</a> &nbsp; &nbsp;
 <a href="demos/#dmzita_rev1">(dm.)zita_rev1</a> &nbsp; &nbsp;
+<a href="demos/#dmvital_rev_demo">(dm.)vital_rev_demo</a> &nbsp; &nbsp;
+<a href="demos/#dmreverbtank_demo">(dm.)reverbTank_demo</a> &nbsp; &nbsp;
 <a href="demos/#dmdattorro_rev_demo">(dm.)dattorro_rev_demo</a> &nbsp; &nbsp;
 <a href="demos/#dmjprev_demo">(dm.)jprev_demo</a> &nbsp; &nbsp;
 <a href="demos/#dmgreyhole_demo">(dm.)greyhole_demo</a> &nbsp; &nbsp;
@@ -659,6 +678,8 @@
 <a href="filters/#fiwgr">(fi.)wgr</a> &nbsp; &nbsp;
 <a href="filters/#finlf2">(fi.)nlf2</a> &nbsp; &nbsp;
 <a href="filters/#fiapnl">(fi.)apnl</a> &nbsp; &nbsp;
+<a href="filters/#fiscatn">(fi.)scatN</a> &nbsp; &nbsp;
+<a href="filters/#fiscat">(fi.)scat</a> &nbsp; &nbsp;
 <a href="filters/#fiallpassn">(fi.)allpassn</a> &nbsp; &nbsp;
 <a href="filters/#fiallpassnn">(fi.)allpassnn</a> &nbsp; &nbsp;
 <a href="filters/#fiallpassnkl">(fi.)allpassnkl</a> &nbsp; &nbsp;
@@ -697,6 +718,9 @@
 <a href="filters/#fifilterbank">(fi.)filterbank</a> &nbsp; &nbsp;
 <a href="filters/#fifilterbanki">(fi.)filterbanki</a> &nbsp; &nbsp;
 <a href="filters/#fisvf">(fi.)svf</a> &nbsp; &nbsp;
+<a href="filters/#fisvftpt">(fi.)SVFTPT</a> &nbsp; &nbsp;
+<a href="filters/#fidynamicsmoother">(fi.)dynamicSmoother</a> &nbsp; &nbsp;
+<a href="filters/#fioneeuro">(fi.)oneEuro</a> &nbsp; &nbsp;
 <a href="filters/#filowpasslr4">(fi.)lowpassLR4</a> &nbsp; &nbsp;
 <a href="filters/#fihighpasslr4">(fi.)highpassLR4</a> &nbsp; &nbsp;
 <a href="filters/#ficrossover2lr4">(fi.)crossover2LR4</a> &nbsp; &nbsp;
@@ -707,7 +731,8 @@
 <a href="filters/#fiavg_rect">(fi.)avg_rect</a> &nbsp; &nbsp;
 <a href="filters/#fiavg_tau">(fi.)avg_tau</a> &nbsp; &nbsp;
 <a href="filters/#fiavg_t60">(fi.)avg_t60</a> &nbsp; &nbsp;
-<a href="filters/#fiavg_t19">(fi.)avg_t19</a> &nbsp; &nbsp;</p>
+<a href="filters/#fiavg_t19">(fi.)avg_t19</a> &nbsp; &nbsp;
+<a href="filters/#fikalman">(fi.)kalman</a> &nbsp; &nbsp;</p>
 <h2 id="hoa">hoa</h2>
 <p><a href="hoa/#hoencoder">(ho.)encoder</a> &nbsp; &nbsp;
 <a href="hoa/#horencoder">(ho.)rEncoder</a> &nbsp; &nbsp;
@@ -748,11 +773,21 @@
 <a href="interpolators/#itinterpolator_four_points">(it.)interpolator_four_points</a> &nbsp; &nbsp;
 <a href="interpolators/#itinterpolator_cubic">(it.)interpolator_cubic</a> &nbsp; &nbsp;
 <a href="interpolators/#itinterpolator_select">(it.)interpolator_select</a> &nbsp; &nbsp;
-<a href="interpolators/#itlagrangecoeffsn,-xcoordslist-">(it.)lagrangeCoeffs(N, xCoordsList) </a> &nbsp; &nbsp;
-<a href="interpolators/#itlagrangeinterpolationn,-xcoordslist-">(it.)lagrangeInterpolation(N, xCoordsList) </a> &nbsp; &nbsp;
-<a href="interpolators/#itfrdtablen,-s-">(it.)frdtable(N, S) </a> &nbsp; &nbsp;
-<a href="interpolators/#itfrwtablen,-s-">(it.)frwtable(N, S) </a> &nbsp; &nbsp;
-<a href="interpolators/#itremap-">(it.)remap </a> &nbsp; &nbsp;</p>
+<a href="interpolators/#itlerp">(it.)lerp</a> &nbsp; &nbsp;
+<a href="interpolators/#itpiecewise">(it.)piecewise</a> &nbsp; &nbsp;
+<a href="interpolators/#itlagrangecoeffs">(it.)lagrangeCoeffs</a> &nbsp; &nbsp;
+<a href="interpolators/#itlagrangeinterpolation">(it.)lagrangeInterpolation</a> &nbsp; &nbsp;
+<a href="interpolators/#itfrdtable">(it.)frdtable</a> &nbsp; &nbsp;
+<a href="interpolators/#itfrwtable">(it.)frwtable</a> &nbsp; &nbsp;
+<a href="interpolators/#itremap">(it.)remap</a> &nbsp; &nbsp;</p>
+<h2 id="linearalgebra">linearalgebra</h2>
+<p><a href="linearalgebra/#ladeterminant">(la.)determinant</a> &nbsp; &nbsp;
+<a href="linearalgebra/#laminor">(la.)minor</a> &nbsp; &nbsp;
+<a href="linearalgebra/#lainverse">(la.)inverse</a> &nbsp; &nbsp;
+<a href="linearalgebra/#latranspose2">(la.)transpose2</a> &nbsp; &nbsp;
+<a href="linearalgebra/#lamatmul">(la.)matMul</a> &nbsp; &nbsp;
+<a href="linearalgebra/#laidentity">(la.)identity</a> &nbsp; &nbsp;
+<a href="linearalgebra/#ladiag">(la.)diag</a> &nbsp; &nbsp;</p>
 <h2 id="maths">maths</h2>
 <p><a href="maths/#masr">(ma.)SR</a> &nbsp; &nbsp;
 <a href="maths/#mat">(ma.)T</a> &nbsp; &nbsp;
@@ -845,6 +880,7 @@
 <a href="misceffects/#efreverseechonnchans,delay">(ef.)reverseEchoN(nChans,delay)</a> &nbsp; &nbsp;
 <a href="misceffects/#efreversedelayrampeddelay,phase">(ef.)reverseDelayRamped(delay,phase)</a> &nbsp; &nbsp;
 <a href="misceffects/#efuniformpantostereonchans">(ef.)uniformPanToStereo(nChans)</a> &nbsp; &nbsp;
+<a href="misceffects/#eftapestop">(ef.)tapeStop</a> &nbsp; &nbsp;
 <a href="misceffects/#eftranspose">(ef.)transpose</a> &nbsp; &nbsp;
 <a href="misceffects/#efsoftclipquadratic">(ef.)softclipQuadratic</a> &nbsp; &nbsp;
 <a href="misceffects/#efwavefold">(ef.)wavefold</a> &nbsp; &nbsp;</p>
@@ -1092,7 +1128,7 @@
 <a href="physmodels/#pmsfformantmodelfofsmooth_ui_midi">(pm.)SFFormantModelFofSmooth_ui_MIDI</a> &nbsp; &nbsp;
 <a href="physmodels/#pmsfformantmodelbp_ui_midi">(pm.)SFFormantModelBP_ui_MIDI</a> &nbsp; &nbsp;
 <a href="physmodels/#pmallpassnl">(pm.)allpassNL</a> &nbsp; &nbsp;
-<a href="physmodels/#pmmodalmodel">(pm).modalModel</a> &nbsp; &nbsp;</p>
+<a href="physmodels/#pmmodalmodel">(pm.)modalModel</a> &nbsp; &nbsp;</p>
 <h2 id="quantizers">quantizers</h2>
 <p><a href="quantizers/#ququantize">(qu.)quantize</a> &nbsp; &nbsp;
 <a href="quantizers/#ququantizesmoothed">(qu.)quantizeSmoothed</a> &nbsp; &nbsp;
@@ -1122,6 +1158,7 @@
 <a href="reverbs/#rezita_rev_fdn">(re.)zita_rev_fdn</a> &nbsp; &nbsp;
 <a href="reverbs/#rezita_rev1_stereo">(re.)zita_rev1_stereo</a> &nbsp; &nbsp;
 <a href="reverbs/#rezita_rev1_ambi">(re.)zita_rev1_ambi</a> &nbsp; &nbsp;
+<a href="reverbs/#revital_rev">(re.)vital_rev</a> &nbsp; &nbsp;
 <a href="reverbs/#remono_freeverb">(re.)mono_freeverb</a> &nbsp; &nbsp;
 <a href="reverbs/#restereo_freeverb">(re.)stereo_freeverb</a> &nbsp; &nbsp;
 <a href="reverbs/#redattorro_rev">(re.)dattorro_rev</a> &nbsp; &nbsp;
@@ -1156,7 +1193,10 @@
 <a href="signals/#sicconj">(si.)cconj</a> &nbsp; &nbsp;
 <a href="signals/#sionepoleswitching">(si.)onePoleSwitching</a> &nbsp; &nbsp;
 <a href="signals/#sirev">(si.)rev</a> &nbsp; &nbsp;
-<a href="signals/#sivecop">(si.)vecOp</a> &nbsp; &nbsp;</p>
+<a href="signals/#sivecop">(si.)vecOp</a> &nbsp; &nbsp;
+<a href="signals/#sibpar">(si.)bpar</a> &nbsp; &nbsp;
+<a href="signals/#sibsum">(si.)bsum</a> &nbsp; &nbsp;
+<a href="signals/#sibprod">(si.)bprod</a> &nbsp; &nbsp;</p>
 <h2 id="soundfiles">soundfiles</h2>
 <p><a href="soundfiles/#soloop">(so.)loop</a> &nbsp; &nbsp;
 <a href="soundfiles/#soloop_speed">(so.)loop_speed</a> &nbsp; &nbsp;
@@ -1261,7 +1301,7 @@
 
         <footer class="col-md-12">
             <hr>
-                <p>Copyright &copy; 2019-2024 <a href="https://www.grame.fr">Grame-CNCM</a></p>
+                <p>Copyright &copy; 2019-2025 <a href="https://www.grame.fr">Grame-CNCM</a></p>
         </footer>
         <script>
             var base_url = "..",

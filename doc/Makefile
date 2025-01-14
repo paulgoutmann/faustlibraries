@@ -6,7 +6,7 @@ DOCDIR   := docs
 SITEDIR	 := ../docs
 FAUSTLIBS ?= ../../faustlibraries
 
-SRC   	 := $(shell cat ../../faustlibraries/all.lib | grep import | sed -e 's/[^"]*"\(..*\.lib\).*/\1/')
+SRC   	 := $(shell cat $(FAUSTLIBS)/all.lib | grep import | sed -e 's/[^"]*"\(..*\.lib\).*/\1/')
 MD   	 := $(SRC:%.lib=$(DOCDIR)/libs/%.md)
 LIST   	 := $(SRC:%.lib=%)
 
@@ -79,7 +79,7 @@ $(FAUSTDIR):
 
 ####################################################################
 install:
-	pip install mkdocs
+	pip install mkdocs==1.5.3
 	pip install mkdocs-pdf-export-plugin
 	pip install markdown-include
 	pip install mkdocs-bootswatch
